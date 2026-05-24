@@ -10,3 +10,6 @@
 # Maister task tracking (generated per-project, not part of plugin source)
 .maister/
 /.worktrees/
+
+# Build output
+output/

@@ -1,7 +1,10 @@
-.PHONY: build validate clean watch
+.PHONY: build build-kiro validate clean watch
 
 build:
 	bash platforms/copilot-cli/build.sh
+
+build-kiro:
+	bash platforms/kiro-cli/build.sh
 
 validate:
 	@echo "Checking no colons in command names..."

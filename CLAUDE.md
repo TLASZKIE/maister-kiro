@@ -97,3 +97,34 @@ These three files need version/name changes during the merge workflow:
 2. Run `/maister:init` to initialize the framework
 3. Test commands like `/maister:development "test feature"`
 4. Test workflows with different task types and complexity levels
+
+## Platform: Kiro CLI
+
+The `platforms/kiro-cli/build.sh` script generates a Kiro CLI-compatible output in `output/kiro-cli/.kiro/`. Run with `make build-kiro`.
+
+### Concept Mapping
+
+| Claude Code | Kiro CLI | Notes |
+|-------------|----------|-------|
+| `skills/*/SKILL.md` | `.kiro/skills/*/SKILL.md` | Same agentskills.io format |
+| `commands/*.md` | `.kiro/skills/*/SKILL.md` | Commands become skills (skills ARE slash commands in Kiro) |
+| `agents/*.md` | `.kiro/agents/references/*.md` | Subagent definitions as reference files |
+| `hooks/` | Agent JSON `hooks` field | Hooks live in agent config, not separate scripts |
+| `CLAUDE.md` | `.kiro/steering/maister.md` | Steering files replace CLAUDE.md |
+| `.mcp.json` | `.kiro/settings/mcp.json` | Same format |
+
+### Key Differences from Claude Code
+
+- **No plugin system**: Kiro CLI uses `.kiro/` directory convention instead of a plugin marketplace
+- **Skills = slash commands**: Any skill named `foo` becomes `/foo` automatically
+- **Custom agents**: JSON config files in `.kiro/agents/` define tool access, hooks, and resources
+- **Steering**: Markdown files in `.kiro/steering/` replace `CLAUDE.md` for project instructions
+- **No multi-select**: Sequential single-select questions only
+- **User questions**: `ask_user` tool instead of `AskUserQuestion`
+
+### Usage
+
+Copy `output/kiro-cli/.kiro/` into a target project, then:
+```bash
+kiro-cli --agent maister
+```
