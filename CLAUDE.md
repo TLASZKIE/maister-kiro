@@ -120,7 +120,7 @@ The `platforms/kiro-cli/build.sh` script generates a Kiro CLI-compatible output 
 - **Custom agents**: JSON config files in `.kiro/agents/` define tool access, hooks, and resources
 - **Steering**: Markdown files in `.kiro/steering/` replace `CLAUDE.md` for project instructions
 - **No multi-select**: Sequential single-select questions only
-- **User questions**: `ask_user` tool instead of `AskUserQuestion`
+- **No ask_user tool**: Kiro CLI has no `ask_user` or `AskUserQuestion` tool. The build script converts all tool invocation references to direct-ask instructions (present question with numbered options in response text, then STOP and wait for user reply).
 
 ### Usage
 

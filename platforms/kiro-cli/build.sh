@@ -49,9 +49,24 @@ find "$OUT/.kiro/skills" -name "*.md" | while read f; do
   sedi 's/CLAUDE\.md/.kiro\/steering\/maister.md/g' "$f"
 done
 
-# ─── 7. Replace AskUserQuestion with Kiro's ask_user ───
+# ─── 7. Replace AskUserQuestion tool references with direct-ask pattern ───
+# Kiro CLI has no ask_user tool — the agent asks questions directly in its response
+# and waits for the user's next message. Replace tool invocation language with direct-ask.
 find "$OUT/.kiro" -name "*.md" | while read f; do
-  sedi 's/AskUserQuestion/ask_user/g' "$f"
+  sedi \
+    -e 's/Invoke `AskUserQuestion` now/Ask the user directly in your response now (present options as a numbered list and STOP — wait for their reply)/g' \
+    -e 's/invoke `AskUserQuestion`/ask the user directly in your response (present options as a numbered list and STOP — wait for their reply)/g' \
+    -e 's/invoke the `AskUserQuestion` tool/ask the user directly in your response (present options as a numbered list and STOP — wait for their reply)/g' \
+    -e 's/Use `AskUserQuestion`/Ask the user directly in your response/g' \
+    -e 's/use `AskUserQuestion`/ask the user directly in your response/g' \
+    -e 's/USE AskUserQuestion/ASK THE USER directly in your response/g' \
+    -e 's/use AskUserQuestion/ask the user directly in your response/g' \
+    -e 's/Use AskUserQuestion/Ask the user directly in your response/g' \
+    -e 's/`AskUserQuestion` tool/direct question in your response/g' \
+    -e 's/AskUserQuestion tool/direct question in your response/g' \
+    -e 's/`AskUserQuestion`/a direct question to the user/g' \
+    -e 's/AskUserQuestion/a direct question to the user/g' \
+    "$f"
 done
 
 # ─── 8. Transform multi-select patterns to sequential ───
@@ -66,6 +81,26 @@ done
 
 # ─── 9. Create steering file from CLAUDE.md ───
 cp "$CORE/CLAUDE.md" "$OUT/.kiro/steering/maister.md"
+
+# ─── 9b. Apply same transformations to steering file (created after steps 5-7) ───
+sedi 's/maister:/maister-/g' "$OUT/.kiro/steering/maister.md"
+sedi 's/CLAUDE\.md/.kiro\/steering\/maister.md/g' "$OUT/.kiro/steering/maister.md"
+sedi \
+  -e 's/Invoke `AskUserQuestion` now/Ask the user directly in your response now (present options as a numbered list and STOP — wait for their reply)/g' \
+  -e 's/invoke `AskUserQuestion`/ask the user directly in your response (present options as a numbered list and STOP — wait for their reply)/g' \
+  -e 's/invoke the `AskUserQuestion` tool/ask the user directly in your response (present options as a numbered list and STOP — wait for their reply)/g' \
+  -e 's/Use `AskUserQuestion`/Ask the user directly in your response/g' \
+  -e 's/use `AskUserQuestion`/ask the user directly in your response/g' \
+  -e 's/USE AskUserQuestion/ASK THE USER directly in your response/g' \
+  -e 's/use AskUserQuestion/ask the user directly in your response/g' \
+  -e 's/Use AskUserQuestion/Ask the user directly in your response/g' \
+  -e 's/`AskUserQuestion` tool/direct question in your response/g' \
+  -e 's/AskUserQuestion tool/direct question in your response/g' \
+  -e 's/`AskUserQuestion`/a direct question to the user/g' \
+  -e 's/AskUserQuestion/a direct question to the user/g' \
+  "$OUT/.kiro/steering/maister.md"
+
+# ─── 9c. Append Platform: Kiro CLI section AFTER transformations ───
 cat >> "$OUT/.kiro/steering/maister.md" << 'EOF'
 
 ## Platform: Kiro CLI
@@ -74,7 +109,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **No multi-select**: When asking users to select multiple options, ask sequential single-select questions instead
 - **Skill names**: Use `maister-` prefix (e.g., `maister-development`); skills double as slash commands in Kiro CLI
 - **Project instructions**: Use `.kiro/steering/` files instead of `CLAUDE.md`
-- **User questions**: Use `ask_user` tool instead of `AskUserQuestion`
+- **No ask_user tool**: Kiro CLI does NOT have an `ask_user` or `AskUserQuestion` tool. To ask the user a question, simply write the question directly in your response text with numbered options and STOP. Wait for the user's next message as their answer. This applies to all MANDATORY GATEs, phase transitions, and clarifying questions.
 - **Subagents**: Agent definitions are in `.kiro/agents/references/` — reference them by filename
 - **Hooks**: Defined in the agent JSON config, not as separate shell scripts
 EOF
@@ -95,7 +130,7 @@ cat > "$OUT/.kiro/agents/maister.json" << 'EOF'
   "hooks": {
     "userPromptSubmit": [
       {
-        "command": "echo '{\"additionalContext\": \"MAISTER PLUGIN RULE: When any /maister-* slash command appears, follow the skill instructions exactly. Do not substitute your own approach. Complexity assessment is the workflow job, not yours. At every MANDATORY GATE checkpoint, use ask_user regardless of permission mode.\"}'"
+        "command": "echo '{\"additionalContext\": \"MAISTER PLUGIN RULE: When any /maister-* slash command appears, follow the skill instructions exactly. Do not substitute your own approach. Complexity assessment is the workflow job, not yours. At every MANDATORY GATE checkpoint, ask the user directly in your response (present options as a numbered list and STOP to wait for their reply) regardless of permission mode.\"}'"
       }
     ],
     "preToolUse": [
