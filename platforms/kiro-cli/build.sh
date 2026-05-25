@@ -156,6 +156,27 @@ cp "$CORE/.mcp.json" "$OUT/.kiro/settings/mcp.json"
 # ─── 12. Remove hooks directory (not used in Kiro CLI — hooks are in agent config) ───
 rm -rf "$OUT/.kiro/skills/hooks" 2>/dev/null || true
 
+# ─── 13. Rename skill folders to match the `name:` field in SKILL.md ───
+# Kiro CLI requires the skill folder name to match the skill name in frontmatter.
+# Step 4 stripped the `maister:` prefix → `maister-` in the name field, but folders
+# like `development` still need to be renamed to `maister-development` to match.
+# Path references in all .md files are updated before each folder rename.
+for dir in "$OUT/.kiro/skills"/*/; do
+  [ -d "$dir" ] || continue
+  current_name=$(basename "$dir")
+  skill_file="$dir/SKILL.md"
+  [ -f "$skill_file" ] || continue
+  skill_name=$(grep -m1 '^name:' "$skill_file" | sed -E 's/^name:[[:space:]]*//' | tr -d '[:space:]\r')
+  if [ -n "$skill_name" ] && [ "$skill_name" != "$current_name" ]; then
+    # Update path references like `skills/<old>/...` in every .md under .kiro/
+    find "$OUT/.kiro" -name "*.md" | while read f; do
+      sedi "s|skills/${current_name}/|skills/${skill_name}/|g" "$f"
+    done
+    # Rename the folder
+    mv "${dir%/}" "$OUT/.kiro/skills/$skill_name"
+  fi
+done
+
 echo "Built Kiro CLI variant at $OUT"
 echo ""
 echo "To use: copy $OUT/.kiro/ into your project root, then run:"
